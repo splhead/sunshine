@@ -7,4 +7,12 @@
     <string name="pref_location_label">Location</string>
     <string name="pref_location_key" translatable="false">location</string>
     <string name="pref_location_default" translatable="false">76812700</string>
+    <string name="pref_unit_dialog_title">Temperature Units</string>
+    <string name="pref_unit_key">unit</string>
+    <!-- default is celsius -->
+    <string name="pref_unit_default">metric</string>
+    <string name="pref_unit_fahrenheit_entry">Fahrenheit</string>
+    <string name="pref_unit_celsius_entry">Celsius</string>
+    <string name="pref_unit_fahrenheit_value">imperial</string>
+    <string name="pref_unit_celsius_value">metric</string>
 </resources>

@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.format.Time;
@@ -30,7 +31,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -45,17 +45,8 @@ public class ForecastFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Create some dummy data for the ListView.  Here's a sample weekly forecast
-        String[] data = {
-                "Mon 6/23 - Sunny - 31/17",
-                "Tue 6/24 - Foggy - 21/8",
-                "Wed 6/25 - Cloudy - 22/17",
-                "Thurs 6/26 - Rainy - 18/11",
-                "Fri 6/27 - Foggy - 21/10",
-                "Sat 6/28 - TRAPPED IN WEATHERSTATION - 23/18",
-                "Sun 6/29 - Sunny - 20/7"
-        };
-        List<String> weekForecast = new ArrayList<>(Arrays.asList(data));
+
+        List<String> weekForecast = new ArrayList<>();
         mForecastAdapter = new ArrayAdapter<>(getActivity(),
                 R.layout.list_item_forecast, R.id.list_item_forecast_textview,weekForecast);
         View root = inflater.inflate(R.layout.fragment_main, container, false);
@@ -66,7 +57,6 @@ public class ForecastFragment extends Fragment {
             mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-//                    Toast.makeText(getActivity(), mForecastAdapter.getItem(i), Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(getActivity(), DetailActivity.class)
                             .putExtra(Intent.EXTRA_TEXT, mForecastAdapter.getItem(i));
                     startActivity(intent);
@@ -84,6 +74,12 @@ public class ForecastFragment extends Fragment {
     }
 
     @Override
+    public void onStart() {
+        updateWheather();
+        super.onStart();
+    }
+
+    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.forecastfragment, menu);
         super.onCreateOptionsMenu(menu, inflater);
@@ -95,12 +91,21 @@ public class ForecastFragment extends Fragment {
 
         switch (id) {
             case R.id.action_refresh:
-                FetchWeatherTask weatherTask = new FetchWeatherTask();
-                weatherTask.execute("94043");
+                updateWheather();
                 return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    void updateWheather() {
+        String zipCode = PreferenceManager
+                .getDefaultSharedPreferences(getActivity())
+                .getString(getString(R.string.pref_location_key),
+                        getString(R.string.pref_location_default));
+
+        FetchWeatherTask weatherTask = new FetchWeatherTask();
+        weatherTask.execute(zipCode);
     }
 
     class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
@@ -127,9 +132,16 @@ public class ForecastFragment extends Fragment {
                 final String FORECAST_BASE_URL = "http://api.openweathermap.org/data/2.5/forecast/daily?";
                 final String APPID_PARAM = "appid";
                 final String ZIP_PARAM = "q";
+                final String CNT_PARAM = "cnt";
+                final String UNITS_PARAM = "units";
+
+                String unit = PreferenceManager.getDefaultSharedPreferences(getActivity())
+                        .getString(getString(R.string.pref_unit_key), getString(R.string.pref_unit_default));
 
                 Uri builtUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
                         .appendQueryParameter(ZIP_PARAM, params[0])
+                        .appendQueryParameter(CNT_PARAM, "7")
+                        .appendQueryParameter(UNITS_PARAM, unit)
                         .appendQueryParameter(APPID_PARAM, BuildConfig.OPEN_WEATHER_MAP_API_KEY)
                         .build();
 
